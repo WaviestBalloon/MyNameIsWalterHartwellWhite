@@ -26,7 +26,7 @@ async function rendervideo(ip, id, callback) {
 			});
 		});
 
-	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/1.5:y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
+	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w):y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
 		if (err) {
 			return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: ${err}`);
 		}
