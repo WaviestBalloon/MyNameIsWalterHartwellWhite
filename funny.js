@@ -26,7 +26,7 @@ async function rendervideo(ip, id, callback) {
 			});
 		});
 
-	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w):y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
+	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/6:y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
 		if (err) {
 			return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: ${err}`);
 		}
@@ -61,31 +61,31 @@ app.get('/', async function (req, res) {
 				}
 			});
 		}, 50000);
-	}
 
-	try {
-		console.log(`rendering video for ${ip}`);
-		await rendervideo(ip, id, function (returned) {
-			console.log(`finished rendering video for ${id}`);
-			res.setHeader('Content-Type', 'video/mp4');
-			res.setHeader('X-COMPLETEDIN', `${Date.now() - id}ms`);
-			res.sendFile(__dirname + `/bin/${id}.mp4`);
-			fuckyoudiscord.forEach((point) => {
-				if (point == ip) {
-					fuckyoudiscord.delete(point);
-				}
+		try {
+			console.log(`rendering video for ${ip}`);
+			await rendervideo(ip, id, function (returned) {
+				console.log(`finished rendering video for ${id}`);
+				res.setHeader('Content-Type', 'video/mp4');
+				res.setHeader('X-COMPLETEDIN', `${Date.now() - id}ms`);
+				res.sendFile(__dirname + `/bin/${id}.mp4`);
+				fuckyoudiscord.forEach((point) => {
+					if (point == ip) {
+						fuckyoudiscord.delete(point);
+					}
+				});
+				setTimeout(() => {
+					try {
+						fs.unlinkSync(`./bin/${id}.mp4`);
+					} catch (err) {
+						return console.warn(`Unable to clean file from bin storage\nNerd stuff: ${err}`);
+					}
+				}, 35000)
 			});
-			setTimeout(() => {
-				try {
-					fs.unlinkSync(`./bin/${id}.mp4`);
-				} catch (err) {
-					return console.warn(`Unable to clean file from bin storage\nNerd stuff: ${err}`);
-				}
-			}, 35000)
-		});
-	} catch(err) {
-		console.warn(err);
-		res.send("Something went wrong, retry later");
+		} catch(err) {
+			console.warn(err);
+			res.send("Something went wrong, retry later");
+		}
 	}
 });
 
