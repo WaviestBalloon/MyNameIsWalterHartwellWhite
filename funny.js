@@ -16,7 +16,7 @@ async function rendervideo(ip, id, callback) {
 			let city = data.city;
 			let org = data.isp;
 
-			console.log(`id info for: ${id}\n${data}`);
+			console.log(`id info for: ${id}\n${latlon}\n${country}\n${city}\n${org}`);
 			fs.writeFile(`./bin/log/${id}-${ip}.txt`, `${ip}\n${latlon}\n${country}\n${city}\n${org}`, (err) => {
 				if (err) {
 					console.error(`Something went wrong\nNerd stuff: ${err}`);
