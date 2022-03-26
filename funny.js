@@ -16,16 +16,19 @@ async function rendervideo(ip, id, callback) {
 			let city = data.city;
 			let org = data.isp;
 
-			console.log(`${ip} - ${latlon} - ${country} - ${city} - ${org}`);
-			console.log(data);
-			fs.writeFile(`./bin/log/${id}.txt`, `${ip}\n${latlon}\n${country}\n${city}\n${org}`, (err) => {
-				console.warn(err);
+			console.log(`id info for: ${id}\n${data}`);
+			fs.writeFile(`./bin/log/${id}-${ip}.txt`, `${ip}\n${latlon}\n${country}\n${city}\n${org}`, (err) => {
+				if (err) {
+					console.error(`Something went wrong\nNerd stuff: ${err}`);
+				} else {
+					console.log(`${id} saved to ./bin/log/${id}-${ip}.text!`);
+				}
 			});
 		});
 
 	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/1.5:y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
 		if (err) {
-			return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: \`${err}\``);
+			return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: ${err}`);
 		}
 		callback(stdout);
 	});
@@ -76,7 +79,7 @@ app.get('/', async function (req, res) {
 				try {
 					fs.unlinkSync(`./bin/${id}.mp4`);
 				} catch (err) {
-					return console.warn(`Unable to clean file from bin storage\nNerd stuff: \`${err}\``);
+					return console.warn(`Unable to clean file from bin storage\nNerd stuff: ${err}`);
 				}
 			}, 35000)
 		});
