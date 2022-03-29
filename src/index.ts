@@ -23,7 +23,7 @@ async function renderVideo(ip: string) {
 	}
 	console.log(`ID info for: ${ip}\nLatitude, Longitude: ${data.latitude}, ${data.longitude}\nCountry: ${data.country}\nCity: ${data.city}\nOrganization: ${data.organization}`);
 	try {
-		await writeFile(`./bin/logs/${ip}.txt`, `${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
+		await writeFile(`./bin/logs/${ip}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
 	} catch (e) {
 		throw e;
 	}
@@ -50,6 +50,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 		startedAt = Date.now();
 
 	if (existsSync(`./bin/videos/${ip}_out.mp4`)) {
+		console.log(`Video ${ip} already exists, serving!`);
 		res.sendFile(`./bin/videos/${ip}_out.mp4`, { root: '.' });
 		return;
 	}
@@ -80,6 +81,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 
 		setTimeout(async () => {
 			try {
+				console.log('Deleting video', ip);
 				await unlink(`./bin/videos/${ip}_out.mp4`);
 			} catch (e) {
 				console.error(e);

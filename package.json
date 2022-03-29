@@ -6,5 +6,6 @@
 	"devDependencies": {
 		"@types/express": "^4.17.13"
 	},
-	"type": "module"
+	"type": "module",
+	"main": "dist/index.js"
 }
