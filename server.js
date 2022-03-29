@@ -3,34 +3,50 @@ const { exec } = require('child_process')
 const { stdout, stderr } = require('process')
 const fs = require('fs');
 const fetch = require('node-fetch');
+const iplookup = require('./ip.js');
 
 const app = express();
 let fuckyoudiscord = new Set();
 
+function removeipfromratelimit(ip) {
+	fuckyoudiscord.forEach((point) => {
+		if (point == ip) {
+			fuckyoudiscord.delete(point);
+		}
+	});
+}
+
 async function rendervideo(ip, id, callback) {
-	await fetch(`http://ip-api.com/json/${ip}`)
-		.then(response => response.json())
-		.then(data => {
-			let latlon = data.lat + "," + data.lon;
-			let country = data.country;
-			let city = data.city;
-			let org = data.isp;
+	await iplookup.getinfo(ip, (err, data) => {
+		if (err) {
+			return console.error(`Something went wrong\nNerd stuff: ${err}`);
+		} else {
+			let latlon = `${data[0]},${data[1]}`;
+			let country = data[2];
+			let city = data[3];
+			let org = data[4];
 
 			console.log(`id info for: ${id}\n${latlon}\n${country}\n${city}\n${org}`);
 			fs.writeFile(`./bin/log/${id}-${ip}.txt`, `${ip}\n${latlon}\n${country}\n${city}\n${org}`, (err) => {
 				if (err) {
-					console.error(`Something went wrong\nNerd stuff: ${err}`);
+					return console.error(`Something went wrong\nNerd stuff: ${err}`);
 				} else {
 					console.log(`${id} saved to ./bin/log/${id}-${ip}.text!`);
 				}
 			});
-		});
-
-	exec(`ffmpeg -i ${`./funny.mp4`} -vf "drawtext=fontfile=./impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/12:y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
-		if (err) {
-			return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: ${err}`);
 		}
-		callback(stdout);
+
+		exec(`ffmpeg -i ${`./assets/funny.mp4`} -vf "drawtext=fontfile=./assets/impact.ttf:textfile=./bin/log/${id}-${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/12:y=(h-text_h)/2" -codec:a copy ./bin/${id}.mp4`, (err, stdout, stderr) => { // pain, fix later
+			try {
+				fs.unlinkSync(`./bin/log/${id}-${ip}.txt`);
+			} catch (err) {
+				console.error(`Something went wrong\nNerd stuff: ${err}`);
+			}
+			if (err) {
+				return console.error(`Something went wrong, failed at the ffmpeg instance\nNerd stuff: ${err}`);
+			}
+			callback(stdout);
+		});
 	});
 }
 
@@ -42,6 +58,7 @@ app.get('/', async function (req, res) {
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 	const id = Date.now();
 	const headers = req.headers;
+	console.log(headers);
 
 	ip = ip.split(':').slice(-1)[0];
 
@@ -54,13 +71,7 @@ app.get('/', async function (req, res) {
 	} else {
 		console.log(`new request, from ${ip}, assigned a video id to serve of ${id}`);
 		fuckyoudiscord.add(ip);
-		setTimeout(() => {
-			fuckyoudiscord.forEach((point) => {
-				if (point == ip) {
-					fuckyoudiscord.delete(point);
-				}
-			});
-		}, 50000);
+		setTimeout(() => removeipfromratelimit(ip), 25000);
 
 		try {
 			console.log(`rendering video for ${ip}`);
@@ -69,11 +80,8 @@ app.get('/', async function (req, res) {
 				res.setHeader('Content-Type', 'video/mp4');
 				res.setHeader('X-COMPLETEDIN', `${Date.now() - id}ms`);
 				res.sendFile(__dirname + `/bin/${id}.mp4`);
-				fuckyoudiscord.forEach((point) => {
-					if (point == ip) {
-						fuckyoudiscord.delete(point);
-					}
-				});
+
+				removeipfromratelimit(ip);
 				setTimeout(() => {
 					try {
 						fs.unlinkSync(`./bin/${id}.mp4`);
@@ -84,11 +92,12 @@ app.get('/', async function (req, res) {
 			});
 		} catch(err) {
 			console.warn(err);
-			res.send("Something went wrong, retry later");
+			removeipfromratelimit(ip);
+			res.send("Something went wrong, retry again");
 		}
 	}
 });
 
 app.listen(8080, function () {
-	console.log('web app listening on port 8080');
+	console.log('walter is confessing on port 8080');
 });
