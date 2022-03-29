@@ -1,13 +1,13 @@
 import express from 'express';
 import { exec } from 'node:child_process';
-import { mkdir, writeFile, unlink } from 'node:fs/promises';
+import { mkdir, writeFile, unlink, rmdir } from 'node:fs/promises';
 import getIPInfo from './IPTools.js';
 import { existsSync } from 'node:fs';
 
 const app = express();
 const fuckYouDiscord = new Set();
 
-await unlink('./bin');
+await rmdir('./bin', { recursive: true });
 await mkdir('./bin/logs', { recursive: true });
 await mkdir('./bin/videos', { recursive: true });
 
