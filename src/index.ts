@@ -99,6 +99,6 @@ async function handleRequest(req: express.Request, res: express.Response) {
 }
 
 app.get('/', handleRequest);
-app.get('walt.mp4', handleRequest);
+app.get('/walt.mp4', handleRequest);
 
 app.listen(8080, () => console.log('walter is confessing on port 8080'));
