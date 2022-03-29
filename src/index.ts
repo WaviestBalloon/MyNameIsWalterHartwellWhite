@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 const app = express();
 const fuckYouDiscord = new Set();
 
+await unlink('./bin');
 await mkdir('./bin/logs', { recursive: true });
 await mkdir('./bin/videos', { recursive: true });
 
