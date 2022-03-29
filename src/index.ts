@@ -18,6 +18,9 @@ async function renderVideo(ip: string) {
 	let data;
 	try {
 		data = await getIPInfo(ip);
+		if (data.organization.includes('Google')) {
+			throw new Error('Google detected');
+		}
 	} catch (e) {
 		throw e;
 	}
