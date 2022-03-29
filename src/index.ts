@@ -58,7 +58,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	console.log(req.headers);
 	if (req.headers['user-agent'] && req.headers['user-agent'].includes('Discord')) {
 		console.log('Discord detected for', ip);
-		res.sendFile('./assets/clickit.png');
+		res.sendFile('./assets/clickit.png', { root: '.' });
 		return;
 	}
 	if (fuckYouDiscord.has(ip)) {
