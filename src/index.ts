@@ -76,9 +76,11 @@ async function handleRequest(req: express.Request, res: express.Response) {
 		try {
 			await renderVideo(ip);
 		} catch (e) {
-			console.error(e);
 			if (e.message === 'Google detected') res.sendFile('./assets/clickit.png', { root: '.' });
-			else res.status(500).send('Something went wrong, please try again later.');
+			else {
+				res.status(500).send('Something went wrong, please try again later.');
+				console.error(e);
+			}
 			return;
 		}
 		res.setHeader('Content-Type', 'video/mp4');
