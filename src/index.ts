@@ -25,14 +25,15 @@ async function renderVideo(ip: string) {
 	} catch (e) {
 		throw e;
 	}
+	const ipFileSafe = ip.replace(/[\W]+/g, '_');
 	console.log(`ID info for: ${ip}\nLatitude, Longitude: ${data.latitude}, ${data.longitude}\nCountry: ${data.country}\nCity: ${data.city}\nOrganization: ${data.organization}`);
 	try {
-		await writeFile(`./bin/logs/${ip}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
+		await writeFile(`./bin/logs/${ipFileSafe}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
 	} catch (e) {
 		throw e;
 	}
 
-	const command = `ffmpeg -i ./assets/funny.mp4 -vf "drawtext=fontfile=./assets/impact.ttf:textfile=./bin/logs/${ip}.txt:fontcolor=white:fontsize=85:x=(w-text_w)/12:y=(h-text_h)/2" -c:a copy -c:v libx264 -preset veryfast -crf 18 ./bin/videos/${ip}_out.mp4`;
+	const command = `ffmpeg -i ./assets/funny.mp4 -vf "drawtext=fontfile=./assets/impact.ttf:textfile=./bin/logs/${ipFileSafe}.txt:fontcolor=white:fontsize=65:x=(w-text_w)/12:y=(h-text_h)/2" -c:a copy -c:v libx264 -preset veryfast -crf 18 ./bin/videos/${ipFileSafe}_out.mp4`;
 	await new Promise((resolve, reject) => {
 		exec(command, (err, stdout, stderr) => {
 			if (err) {
@@ -40,7 +41,7 @@ async function renderVideo(ip: string) {
 			} else {
 				console.log(`Video ${ip} rendered successfully!`);
 				try {
-					unlink(`./bin/logs/${ip}.txt`).then(resolve);
+					unlink(`./bin/logs/${ipFileSafe}.txt`).then(resolve);
 				} catch (e) {
 					reject(e);
 				}
@@ -53,9 +54,10 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	const ip = (req.headers['x-forwarded-for'] as string) || req.connection.remoteAddress,
 		startedAt = Date.now();
 
-	if (existsSync(`./bin/videos/${ip}_out.mp4`)) {
+	const ipFileSafe = ip.replace(/[\W]+/g, '_');
+	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`)) {
 		console.log(`Video ${ip} already exists, serving!`);
-		res.sendFile(`./bin/videos/${ip}_out.mp4`, { root: '.' });
+		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: '.' });
 		return;
 	}
 
@@ -85,12 +87,12 @@ async function handleRequest(req: express.Request, res: express.Response) {
 		}
 		res.setHeader('Content-Type', 'video/mp4');
 		res.setHeader('X-Completed-In', `${Date.now() - startedAt}`);
-		res.sendFile(`./bin/videos/${ip}_out.mp4`, { root: '.' });
+		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: '.' });
 
 		setTimeout(async () => {
 			try {
 				console.log('Deleting video', ip);
-				await unlink(`./bin/videos/${ip}_out.mp4`);
+				await unlink(`./bin/videos/${ipFileSafe}_out.mp4`);
 			} catch (e) {
 				console.error(e);
 			}
