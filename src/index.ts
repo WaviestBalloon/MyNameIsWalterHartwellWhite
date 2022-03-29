@@ -56,13 +56,14 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	}
 
 	console.log(req.headers);
+	if (req.headers['user-agent'] && req.headers['user-agent'].includes('Discord')) {
+		console.log('Discord detected for', ip);
+		res.sendFile('./assets/clickit.png');
+		return;
+	}
 	if (fuckYouDiscord.has(ip)) {
 		console.log('Rate limit hit for', ip);
 		res.status(429).header('Content-Type', 'text/html').send('You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after 35 seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
-		return;
-	} else if (req.headers['user-agent'].includes('Discord')) {
-		console.log('Discord detected for', ip);
-		res.sendFile('./assets/clickit.png');
 		return;
 	} else {
 		console.log('new request from', ip);
