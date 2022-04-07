@@ -7,15 +7,57 @@
 		<meta name="og:title" content="the berg" />
 		<meta name="og:description" content="click for your very own berg!!!!" />
 		<meta name="og:image" content="https://niko.wav.blue/theberg.gif" />
+		<script>
+			let video;
+			let clicked = false;
+			(async function () {
+				let interval = setInterval(() => {
+					if (!video) {
+						video = document.querySelector('video');
+					} else {
+						if (video.paused && clicked) {
+							video.play();
+						}
+					}
+				}, 1000);
+				document.addEventListener('click', () => {
+					if (!clicked) {
+						clicked = true;
+						document.querySelector('p').remove();
+					}
+				});
+			})();
+		</script>
 		<style>
 			body {
 				display: flex;
 				justify-content: center;
 				align-items: center;
 			}
+			video {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			p {
+				font-size: 1.5em;
+				font-weight: bold;
+				color: white;
+				background-color: black;
+				padding: 1em;
+				border-radius: 0.5em;
+				text-align: center;
+				/* overlay text on top of video centered to prompt for user interaction for video to play */
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				cursor: default;
+			}
 		</style>
 	</head>
 	<body>
 		<video src="https://niko.wav.blue/walt.mp4" loop></video>
+		<p>Please click to make work!!!</p>
 	</body>
 </html>
