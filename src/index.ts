@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs';
 const app = express();
 const fuckYouDiscord = new Set();
 
-await rmdir('./bin', { recursive: true });
+if (existsSync('./bin')) await rmdir('./bin', { recursive: true });
 await mkdir('./bin/logs', { recursive: true });
 await mkdir('./bin/videos', { recursive: true });
 
@@ -100,6 +100,8 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	}
 }
 
+app.get('/theberg.gif', (req, res) => res.sendFile('./assets/theberg.gif', { root: '.' }));
+app.get('/theberg.html', (req, res) => res.sendFile('./assets/theberg.html', { root: '.' }));
 app.get('*', handleRequest);
 
 app.listen(8080, () => console.log('walter is confessing on port 8080'));
