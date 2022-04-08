@@ -1,0 +1,13 @@
+[Unit]
+Requires=network.target
+Description=Walter White confesses
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/walterwhite
+User=ubuntu
+ExecStart=node .
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
