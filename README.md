@@ -21,12 +21,10 @@ There is a `walter.service` file that contains a example configuration for Walte
 
 # Support
 
-Probably won't give out support for this, as it's just a meme site nothing special
-
-If you really, *really*, **really** require help, create a issue
+Probably won't give out support for this, as it's just a meme site nothing special. If you really, *really*, **really** require help, create a issue
 
 
-
+<br>
 
 
 Re-written by Alek
