@@ -64,7 +64,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	console.log(req.headers);
 	if (req.headers['user-agent'] && req.headers['user-agent'].includes('Discord')) {
 		console.log('Discord detected for', ip);
-		res.sendFile(`./assets/theberg.html`, { root: '.' });
+		res.sendFile(`./assets/oldberg.html`, { root: '.' });
 		return;
 	}
 	if (fuckYouDiscord.has(ip)) {
@@ -78,7 +78,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 		try {
 			await renderVideo(ip);
 		} catch (e) {
-			if (e.message === 'Google detected') res.sendFile(`./assets/theberg.html`, { root: '.' });
+			if (e.message === 'Google detected') res.sendFile(`./assets/oldberg.html`, { root: '.' });
 			else {
 				res.status(500).send('Something went wrong, please try again later.');
 				console.error(e);
@@ -101,7 +101,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 }
 
 app.get('/theberg.gif', (req, res) => res.sendFile('./assets/theberg.gif', { root: '.' }));
-app.get('/theberg.html', (req, res) => res.sendFile('./assets/theberg.html', { root: '.' }));
+app.get('/oldberg.html', (req, res) => res.sendFile('./assets/oldberg.html', { root: '.' }));
 app.get('*', handleRequest);
 
 app.listen(8080, () => console.log('walter is confessing on port 8080'));
