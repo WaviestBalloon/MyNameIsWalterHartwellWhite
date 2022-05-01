@@ -104,4 +104,4 @@ app.get('/theberg.gif', (req, res) => res.sendFile('./assets/theberg.gif', { roo
 app.get('/theberg.html', (req, res) => res.sendFile('./assets/theberg.html', { root: '.' }));
 app.get('*', handleRequest);
 
-app.listen(8080, () => console.log('walter is confessing on port 8080'));
+app.listen(8080, () => console.log('walter is confessing on port 8080')); // P.S. Change this to port 80 if you want to use the web server, I have my port set to 8080. You'll most likely need to change it
