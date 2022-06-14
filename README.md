@@ -16,12 +16,12 @@ A live-version is running on my server @ https://niko.wav.blue/
 
 # Add it as a systemd service
 
-There is a `walter.service` file that contains a example configuration for Walter, you'll have to change this to your own configuration and move it into `/etc/systemd/system/` then start it with `systemctl start walter.service`
+There is a `walter.service` file that contains a example configuration for Walter, you'll have to change this to your own configuration and move it into `/etc/systemd/system/`, for example using `mv ./walter.service /etc/systemd/system/`, then start it with `systemctl start walter.service`
 
 
 # Support
 
-Probably won't give out support for this, as it's just a meme site nothing special. If you really, *really*, **really** require help, create a issue
+Probably won't give out support for this, as it's just a little stupid thing, nothing special. If you really, *really*, **really** require help, create a issue
 
 
 <br>
