@@ -2,8 +2,7 @@
 
 A website to tell your confession, and to see your IP, inspired by BattleOfWits
 
-A live-version is running on my server @ https://niko.wav.blue/
-
+[A live-version is running on my server](https://niko.wav.blue/)
 
 # Setup
 
