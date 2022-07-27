@@ -15,6 +15,8 @@ export default async function getIPInfo(ip: string): Promise<IPInfo> {
 			'Accept': 'application/json'
 		},
 		method: 'POST'
+	}).catch((err) => {
+		console.warn(`Unable to fetch IP information: ${err}`); return null
 	});
 	const text = await res.text();
 	const json = JSON.parse(text);
