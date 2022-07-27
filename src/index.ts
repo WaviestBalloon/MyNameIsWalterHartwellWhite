@@ -23,6 +23,7 @@ async function renderVideo(ip: string) {
 			throw new Error('Google detected');
 		}
 	} catch (e) {
+		res.status(500).send('Something went wrong, please try again later.');
 		throw e;
 	}
 	const ipFileSafe = ip.replace(/[\W]+/g, '_');
@@ -30,6 +31,7 @@ async function renderVideo(ip: string) {
 	try {
 		await writeFile(`./bin/logs/${ipFileSafe}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
 	} catch (e) {
+		res.status(500).send('Something went wrong, please try again later.');
 		throw e;
 	}
 
