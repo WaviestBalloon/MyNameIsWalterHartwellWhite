@@ -55,7 +55,7 @@ async function renderVideo(ip: string, res: express.Response) {
 }
 
 async function handleRequest(req: express.Request, res: express.Response) {
-	const ip = (req.headers["x-forwarded-for"] as string) || req.connection.remoteAddress,
+	const ip = (req.headers["x-forwarded-for"] as string),
 		startedAt = Date.now();
 
 	const ipFileSafe = ip.replace(/[\W]+/g, "_");
