@@ -1,37 +1,39 @@
-import express from 'express';
-import { exec } from 'node:child_process';
-import { mkdir, writeFile, unlink, rmdir } from 'node:fs/promises';
-import getIPInfo from './IPTools.js';
-import { existsSync } from 'node:fs';
+import express from "express";
+import { exec } from "node:child_process";
+import { mkdir, writeFile, unlink, rmdir } from "node:fs/promises";
+import getIPInfo from "./IPTools.js";
+import { existsSync } from "node:fs";
 
 const app = express();
 const fuckYouDiscord = new Set();
 
-if (existsSync('./bin')) await rmdir('./bin', { recursive: true });
-await mkdir('./bin/logs', { recursive: true });
-await mkdir('./bin/videos', { recursive: true });
+let deletionTimeout = 35000;
+
+if (existsSync("./bin")) await rmdir("./bin", { recursive: true });
+await mkdir("./bin/logs", { recursive: true });
+await mkdir("./bin/videos", { recursive: true });
 
 function removeIPFromRateLimit(ip: string) {
 	fuckYouDiscord.delete(ip);
 }
 
-async function renderVideo(ip: string) {
+async function renderVideo(ip: string, res: express.Response) {
 	let data;
 	try {
 		data = await getIPInfo(ip);
-		if (data.organization.includes('Google')) {
-			throw new Error('Google detected');
+		if (data.organization.includes("Google")) {
+			throw new Error("Google detected");
 		}
 	} catch (e) {
-		res.status(500).send('Something went wrong, please try again later.');
+		res.status(500).send("Something went wrong, please try again later.");
 		throw e;
 	}
-	const ipFileSafe = ip.replace(/[\W]+/g, '_');
+	const ipFileSafe = ip.replace(/[\W]+/g, "_");
 	console.log(`ID info for: ${ip}\nLatitude, Longitude: ${data.latitude}, ${data.longitude}\nCountry: ${data.country}\nCity: ${data.city}\nOrganization: ${data.organization}`);
 	try {
 		await writeFile(`./bin/logs/${ipFileSafe}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
 	} catch (e) {
-		res.status(500).send('Something went wrong, please try again later.');
+		res.status(500).send("Something went wrong, please try again later.");
 		throw e;
 	}
 
@@ -53,57 +55,57 @@ async function renderVideo(ip: string) {
 }
 
 async function handleRequest(req: express.Request, res: express.Response) {
-	const ip = (req.headers['x-forwarded-for'] as string) || req.connection.remoteAddress,
+	const ip = (req.headers["x-forwarded-for"] as string) || req.connection.remoteAddress,
 		startedAt = Date.now();
 
-	const ipFileSafe = ip.replace(/[\W]+/g, '_');
+	const ipFileSafe = ip.replace(/[\W]+/g, "_");
 	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`)) {
 		console.log(`Video ${ip} already exists, serving!`);
-		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: '.' });
+		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: "." });
 		return;
 	}
 
 	console.log(req.headers);
-	if (req.headers['user-agent'] && req.headers['user-agent'].includes('Discord')) {
-		console.log('Discord detected for', ip);
-		res.sendFile(`./assets/theberg.html`, { root: '.' });
+	if (req.headers["user-agent"] && req.headers["user-agent"].includes("Discord")) {
+		console.log("Discord detected for", ip);
+		res.sendFile(`./assets/theberg.html`, { root: "." });
 		return;
 	}
 	if (fuckYouDiscord.has(ip)) {
-		console.log('Rate limit hit for', ip);
-		res.status(429).header('Content-Type', 'text/html').send('You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after 35 seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
+		console.log("Rate limit hit for", ip);
+		res.status(429).header("Content-Type", "text/html").send(`You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after 35 seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
 		return;
 	} else {
-		console.log('new request from', ip);
+		console.log("new request from", ip);
 		fuckYouDiscord.add(ip);
-		setTimeout(() => removeIPFromRateLimit(ip), 35000);
+		setTimeout(() => removeIPFromRateLimit(ip), deletionTimeout);
 		try {
-			await renderVideo(ip);
+			await renderVideo(ip, res);
 		} catch (e) {
-			if (e.message === 'Google detected') res.sendFile(`./assets/theberg.html`, { root: '.' });
+			if (e.message === "Google detected") res.sendFile(`./assets/theberg.html`, { root: "." });
 			else {
-				res.status(500).send('Something went wrong, please try again later.');
+				res.status(500).send("Something went wrong, please try again later.");
 				console.error(e);
 			}
 			return;
 		}
-		res.setHeader('Content-Type', 'video/mp4');
-		res.setHeader('X-Completed-In', `${Date.now() - startedAt}`);
-		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: '.' });
+		res.setHeader("Content-Type", "video/mp4");
+		res.setHeader("X-Completed-In", `${Date.now() - startedAt}`);
+		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: "." });
 
 		setTimeout(async () => {
 			try {
-				console.log('Deleting video', ip);
+				console.log("Deleting video", ip);
 				await unlink(`./bin/videos/${ipFileSafe}_out.mp4`);
 			} catch (e) {
 				console.error(e);
 			}
-		}, 35000);
+		}, deletionTimeout);
 	}
 }
 
-app.get('/theberg.gif', (req, res) => res.sendFile('./assets/theberg.gif', { root: '.' }));
-app.get('/theberg', (req, res) => res.sendFile('./assets/theberg.html', { root: '.' }));
-app.get('*', handleRequest);
+app.get("/theberg.gif", (req, res) => res.sendFile("./assets/theberg.gif", { root: "." }));
+app.get("/theberg", (req, res) => res.sendFile("./assets/theberg.html", { root: "." }));
+app.get("*", handleRequest);
 
-app.listen(8080, () => console.log('walter is confessing on port 8080')); // P.S. Change this to port 80 if you want to use the web server, I have my port set to 8080 for my Nginx instance. You'll most likely need to change it if you are not using a proxy of any sort.
+app.listen(8080, () => console.log("walter is confessing on port 8080")); // P.S. Change this to port 80 if you want to use the web server, I have my port set to 8080 for my Nginx instance. You"ll most likely need to change it if you are not using a proxy of any sort.
