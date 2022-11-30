@@ -4,6 +4,8 @@ A website to tell your confession, and to see your IP, inspired by BattleOfWits
 
 [A live-version is running on my server](https://niko.wav.blue/)
 
+Support and fuel my stupidity by donating to my **[Patreon](patreon.com/WaviestBalloon)**
+
 # Setup
 
 - Clone the repository and open a terminal in the folder

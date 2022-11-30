@@ -1,6 +1,6 @@
 import express from "express";
 import { exec } from "node:child_process";
-import { mkdir, writeFile, unlink, rmdir } from "node:fs/promises";
+import { mkdir, writeFile, unlink, rm } from "node:fs/promises";
 import getIPInfo from "./IPTools.js";
 import { existsSync } from "node:fs";
 
@@ -8,8 +8,9 @@ const app = express();
 const fuckYouDiscord = new Set();
 
 let deletionTimeout = 35000;
+let portNumber = 8080; // P.S. Change this to port 80 if you want to use a web server, I have my port set to 8080 for my Nginx instance. (so you probably will have to change it!!!)
 
-if (existsSync("./bin")) await rmdir("./bin", { recursive: true });
+if (existsSync("./bin")) await rm("./bin", { recursive: true });
 await mkdir("./bin/logs", { recursive: true });
 await mkdir("./bin/videos", { recursive: true });
 
@@ -73,7 +74,7 @@ async function handleRequest(req: express.Request, res: express.Response) {
 	}
 	if (fuckYouDiscord.has(ip)) {
 		console.log("Rate limit hit for", ip);
-		res.status(429).header("Content-Type", "text/html").send(`You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after 35 seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+		res.status(429).header("Content-Type", "text/html").send(`You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after ${deletionTimeout / 1000} seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
 		return;
 	} else {
 		console.log("new request from", ip);
@@ -108,4 +109,4 @@ app.get("/theberg.gif", (req, res) => res.sendFile("./assets/theberg.gif", { roo
 app.get("/theberg", (req, res) => res.sendFile("./assets/theberg.html", { root: "." }));
 app.get("*", handleRequest);
 
-app.listen(8080, () => console.log("walter is confessing on port 8080")); // P.S. Change this to port 80 if you want to use the web server, I have my port set to 8080 for my Nginx instance. You"ll most likely need to change it if you are not using a proxy of any sort.
+app.listen(portNumber, () => console.log(`walter is confessing on port ${portNumber}`));
