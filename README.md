@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="./assets/theberg.gif">
+</p>
+
 # My Name Is Walter Hartwell White
 
 A website to tell your confession, and to see your IP, inspired by BattleOfWits
@@ -31,7 +35,3 @@ Probably won't give out support for this, as it's just a little stupid thing, no
 Re-written by Alek
 
 My name is Walter Hartwell White. I live at 308 Negra Aroya Lane, Albuquerque, New Mexico, 87104.
-
-<p align="center">
-	<img src="./assets/theberg.gif">
-</p>
