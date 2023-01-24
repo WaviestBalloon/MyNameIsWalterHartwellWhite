@@ -7,8 +7,8 @@ import { existsSync } from "node:fs";
 const app = express();
 const fuckYouDiscord = new Set();
 
-let deletionTimeout = 35000;
-let portNumber = 8080; // P.S. Change this to port 80 if you want to use a web server, I have my port set to 8080 for my Nginx instance. (so you probably will have to change it!!!)
+const deletionTimeout = 35000;
+const portNumber = 8080; // P.S. Change this to port 80 if you want to use a web server, I have my port set to 8080 for my Nginx instance. (so you probably will have to change it!!!)
 
 if (existsSync("./bin")) await rm("./bin", { recursive: true });
 await mkdir("./bin/logs", { recursive: true });
