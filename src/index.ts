@@ -118,7 +118,7 @@ server.get("/theberg.gif", (req: FastifyRequest, res: FastifyReply) => res.send(
 server.get("/theberg", (req: FastifyRequest, res: FastifyReply) => res.type("text/html").send(createReadStream(`./assets/theberg.html`)));
 server.get("*", handleRequest);
 
-server.listen({ port: portNumber }, (err: Error, address: string) => {
+server.listen({ port: portNumber, host: "0.0.0.0" }, (err: Error, address: string) => {
 	if (err) throw err;
 	console.log(`walter heisenburger is confessing on port ${address}`);
 });
