@@ -13,7 +13,7 @@ Support and fuel my stupidity by donating to my **[Patreon](patreon.com/WaviestB
 # Setup
 
 - Clone the repository and open a terminal in the folder
-- Run `npm i` to install the dependencies (`express`, `node-fetch`)
+- Run `npm i` to install the dependencies (`fastify`, `axios`)
 - Make sure to have ffmpeg installed (**not the NodeJS version!**), you can install it by running `sudo apt install ffmpeg` (If you're on Windows use ![my FFmpeg Installer script](https://github.com/WaviestBalloon/FFmpegInstaller))
 - Transpile the code by running `npx tsc`
 - Run walter by running `node .`
