@@ -1,3 +1,5 @@
+# Deprecated - This was the repository before I moved everything over to Axios and Fastify as they offer more performance and flexibility than Node-fetch and Expressjs - Feel free to use this branch but I'll probably not update it or offer any help with it.
+
 <p align="center">
 	<img src="./assets/theberg.gif">
 </p>
