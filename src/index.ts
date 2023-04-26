@@ -1,14 +1,19 @@
-import express from "express";
-import { exec } from "node:child_process";
-import { mkdir, writeFile, unlink, rm } from "node:fs/promises";
-import getIPInfo from "./IPTools.js";
-import { existsSync } from "node:fs";
+import fastify, { FastifyReply, FastifyRequest } from "fastify";
 
-const app = express();
+import getIPInfo from "./IPTools.js";
+import { createReadStream, existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { exec } from "node:child_process";
+import { mkdir, rm } from "node:fs/promises";
+
+const server = fastify({ logger: false });
 const fuckYouDiscord = new Set();
 
-const deletionTimeout = 35000;
-const portNumber = 8080; // P.S. Change this to port 80 if you want to use a web server, I have my port set to 8080 for my Nginx instance. (so you probably will have to change it!!!)
+const ratelimitTimeout = 5000;
+// Rendering videos is costly, I would recommend you'd keep this to a five second cooldown per IP
+const deletionTimeout = 185000;
+// The rendered video will be cached for 185 seconds
+const portNumber = 8080;
+// Change `portNumber` to 80 if you are not using a reverse proxy like Nginx
 
 if (existsSync("./bin")) await rm("./bin", { recursive: true });
 await mkdir("./bin/logs", { recursive: true });
@@ -18,24 +23,29 @@ function removeIPFromRateLimit(ip: string) {
 	fuckYouDiscord.delete(ip);
 }
 
-async function renderVideo(ip: string, res: express.Response) {
+async function renderVideo(ip: string, ipFileSafe: string, res: FastifyReply) {
 	let data;
+
+	if (ip === "127.0.0.1") {
+		console.log(`Localhost detected, using a fake IP!`);
+		ip = "1.1.1.1";
+	}
+
 	try {
 		data = await getIPInfo(ip);
-		if (data.organization.includes("Google")) {
-			throw new Error("Google detected");
-		}
-	} catch (e) {
-		res.status(500).send("Something went wrong, please try again later.");
-		throw e;
+		if (data.organization.includes("Google")) res.code(403).send({ error: "No." });
+	} catch (err) {
+		console.warn(err);
+		res.code(500).send({ error: "Couldn't resolve your IP address, try again later." });
 	}
-	const ipFileSafe = ip.replace(/[\W]+/g, "_");
-	console.log(`ID info for: ${ip}\nLatitude, Longitude: ${data.latitude}, ${data.longitude}\nCountry: ${data.country}\nCity: ${data.city}\nOrganization: ${data.organization}`);
+
+	console.log(data)
+	console.log(`Info for: ${ip}\nLatitude, Longitude: ${data.latitude}, ${data.longitude}\nCountry: ${data.country}\nCity: ${data.city}\nOrganization: ${data.organization}`);
 	try {
-		await writeFile(`./bin/logs/${ipFileSafe}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
-	} catch (e) {
-		res.status(500).send("Something went wrong, please try again later.");
-		throw e;
+		writeFileSync(`./bin/logs/${ipFileSafe}.txt`, `${ip}\n${data.latitude}, ${data.longitude}\n${data.country}\n${data.city}\n${data.organization}`);
+	} catch (err) {
+		console.warn(err);
+		res.code(500).send({ error: "Couldn't write information to bin directory, try again later." });
 	}
 
 	const command = `ffmpeg -i ./assets/funny.mp4 -vf "drawtext=fontfile=./assets/impact.ttf:textfile=./bin/logs/${ipFileSafe}.txt:fontcolor=white:fontsize=65:x=(w-text_w)/12:y=(h-text_h)/2" -c:a copy -c:v libx264 -preset veryfast -crf 18 ./bin/videos/${ipFileSafe}_out.mp4`;
@@ -46,7 +56,8 @@ async function renderVideo(ip: string, res: express.Response) {
 			} else {
 				console.log(`Video ${ip} rendered successfully!`);
 				try {
-					unlink(`./bin/logs/${ipFileSafe}.txt`).then(resolve);
+					unlinkSync(`./bin/logs/${ipFileSafe}.txt`);
+					resolve(true);
 				} catch (e) {
 					reject(e);
 				}
@@ -55,58 +66,59 @@ async function renderVideo(ip: string, res: express.Response) {
 	});
 }
 
-async function handleRequest(req: express.Request, res: express.Response) {
-	const ip = (req.headers["x-forwarded-for"] as string),
+async function handleRequest(req: FastifyRequest, res: FastifyReply) {
+	const ip = req.headers["x-forwarded-for"] as string || req.ip as string,
 		startedAt = Date.now();
+
+	console.log(`New request from ${ip}`);
 
 	const ipFileSafe = ip.replace(/[\W]+/g, "_");
 	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`)) {
 		console.log(`Video ${ip} already exists, serving!`);
-		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: "." });
+		res.send(readFileSync(`./bin/videos/${ipFileSafe}_out.mp4`));
 		return;
 	}
 
-	console.log(req.headers);
 	if (req.headers["user-agent"] && req.headers["user-agent"].includes("Discord")) {
-		console.log("Discord detected for", ip);
-		res.sendFile(`./assets/theberg.html`, { root: "." });
+		console.log(`Discord detected for ${ip}`);
+		res.type("text/html").send(createReadStream(`./assets/theberg.html`));
 		return;
 	}
 	if (fuckYouDiscord.has(ip)) {
-		console.log("Rate limit hit for", ip);
-		res.status(429).header("Content-Type", "text/html").send(`You are being ratelimited, please wait a bit (You should automatically be removed from being ratelimited after ${deletionTimeout / 1000} seconds)<br><iframe width="560" height="315" src="https://www.youtube.com/embed/jeg_TJvkSjg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+		console.log(`Ratelimit hit for ${ip}`);
+		res.code(429).send({ error: `You are sending too many requests, try again after ${deletionTimeout / 1000} seconds (You know I can't cook meth that fast!)` });
 		return;
-	} else {
-		console.log("new request from", ip);
-		fuckYouDiscord.add(ip);
-		setTimeout(() => removeIPFromRateLimit(ip), deletionTimeout);
-		try {
-			await renderVideo(ip, res);
-		} catch (e) {
-			if (e.message === "Google detected") res.sendFile(`./assets/theberg.html`, { root: "." });
-			else {
-				res.status(500).send("Something went wrong, please try again later.");
-				console.error(e);
-			}
-			return;
-		}
-		res.setHeader("Content-Type", "video/mp4");
-		res.setHeader("X-Completed-In", `${Date.now() - startedAt}`);
-		res.sendFile(`./bin/videos/${ipFileSafe}_out.mp4`, { root: "." });
-
-		setTimeout(async () => {
-			try {
-				console.log("Deleting video", ip);
-				await unlink(`./bin/videos/${ipFileSafe}_out.mp4`);
-			} catch (e) {
-				console.error(e);
-			}
-		}, deletionTimeout);
 	}
+
+	fuckYouDiscord.add(ip);
+	setTimeout(() => removeIPFromRateLimit(ip), ratelimitTimeout);
+
+	try {
+		await renderVideo(ip, ipFileSafe, res);
+	} catch (err) {
+		res.code(500).send({ error: "Something went wrong, Jesse Pinkman broke it." });
+		throw err;
+	}
+
+	res.header("Content-Type", "video/mp4");
+	res.header("X-Completed-In", `${Date.now() - startedAt}`);
+	res.send(readFileSync(`./bin/videos/${ipFileSafe}_out.mp4`));
+
+	setTimeout(async () => {
+		try {
+			console.log(`Deleting cached video for ${ip}`);
+			unlinkSync(`./bin/videos/${ipFileSafe}_out.mp4`);
+		} catch (err) {
+			throw err;
+		}
+	}, deletionTimeout);
 }
 
-app.get("/theberg.gif", (req, res) => res.sendFile("./assets/theberg.gif", { root: "." }));
-app.get("/theberg", (req, res) => res.sendFile("./assets/theberg.html", { root: "." }));
-app.get("*", handleRequest);
+server.get("/theberg.gif", (req: FastifyRequest, res: FastifyReply) => res.send(createReadStream(`./assets/theberg.gif`)));
+server.get("/theberg", (req: FastifyRequest, res: FastifyReply) => res.type("text/html").send(createReadStream(`./assets/theberg.html`)));
+server.get("*", handleRequest);
 
-app.listen(portNumber, () => console.log(`walter is confessing on port ${portNumber}`));
+server.listen({ port: portNumber }, (err: Error, address: string) => {
+	if (err) throw err;
+	console.log(`walter heisenburger is confessing on port ${address}`);
+});
