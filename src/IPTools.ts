@@ -29,7 +29,7 @@ export default async function getIPInfo(ip: string): Promise<IPInfo> {
 	const json = JSON.parse(res.data);*/
 	return {
 		latitude: res.data.lat,
-		longitude: res.data.lng ,
+		longitude: res.data.lng,
 		country: res.data.country_name,
 		city: res.data.city,
 		organization: res.data.isp
