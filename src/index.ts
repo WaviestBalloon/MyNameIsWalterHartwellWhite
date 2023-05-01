@@ -14,6 +14,8 @@ const deletionTimeout = 185000;
 // The rendered video will be cached for 185 seconds
 const portNumber = 8080;
 // Change `portNumber` to 80 if you are not using a reverse proxy like Nginx
+// IMPORTANT: If you're going to use port 80, you need to give Node special permissions (https://serverfault.com/questions/602240/how-to-run-node-js-app-on-port-80-are-processes-blocking-my-port)
+// Simply run `sudo setcap cap_net_bind_service=+ep /usr/local/bin/node` OR if you're running NVM, use `which node` to find the binary directory and replace `/usr/local/bin/node` with it
 
 if (existsSync("./bin")) await rm("./bin", { recursive: true });
 await mkdir("./bin/logs", { recursive: true });
