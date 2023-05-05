@@ -76,13 +76,14 @@ async function handleRequest(request: FastifyRequest, reply: FastifyReply) {
 	console.log(request.headers)
 
 	const ipFileSafe = ip.replace(/[\W]+/g, "_");
-	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`)) {
+	const isDiscord = request.headers["user-agent"] && request.headers["user-agent"].includes("Discord");
+	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`) && !isDiscord) {
 		console.log(`Video ${ip} already exists, serving!`);
 		reply.send(readFileSync(`./bin/videos/${ipFileSafe}_out.mp4`));
 		return;
 	}
 
-	if (request.headers["user-agent"] && request.headers["user-agent"].includes("Discord")) {
+	if (isDiscord) {
 		console.log(`Discord detected for ${ip}`);
 		reply.type("text/html").send(readFileSync(`./assets/theberg.html`));
 		return;
