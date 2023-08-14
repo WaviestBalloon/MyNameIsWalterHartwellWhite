@@ -19,14 +19,14 @@ Support and fuel my stupidity by donating to my **[Patreon](patreon.com/WaviestB
 - Run walter by running `node .`
 - **Optional**: See below for information on how to create a systemd service for walter so it will run under a daemon
 
-> **Warning**:
+> [!WARNING]
 > To change the port number that the webserver runs on, you will have to edit the `index.ts` file (`./src/index.ts`) and edit the variable `portNumber` - Read the comments below for a important notice.
 
 # Add it as a systemd service
 
 There is a `walter.service` file that contains a example configuration for Walter, you'll have to change this to your own configuration and move it into `/etc/systemd/system/`, for example using `mv ./walter.service /etc/systemd/system/`, then start it with `systemctl start walter.service`
 
-> **Warning**:
+> [!WARNING]
 > If you are using NVM to manage your NodeJS versions, you will need to replace `node .` in the systemd service with `/home/ZZZZ/.nvm/versions/node/vXX.XX.XX/bin/node .` where `ZZZZ` is your username and `XX.XX.XX` is the version of NodeJS you are using.
 
 # Support
