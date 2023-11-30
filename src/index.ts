@@ -79,6 +79,8 @@ async function handleRequest(request: FastifyRequest, reply: FastifyReply) {
 	const isDiscord = request.headers["user-agent"] && request.headers["user-agent"].includes("Discord");
 	if (existsSync(`./bin/videos/${ipFileSafe}_out.mp4`) && !isDiscord) {
 		console.log(`Video ${ip} already exists, serving!`);
+		reply.header("Content-Type", "video/mp4");
+		reply.header("X-Completed-In", `cached`);
 		reply.send(readFileSync(`./bin/videos/${ipFileSafe}_out.mp4`));
 		return;
 	}
