@@ -1,7 +1,7 @@
 import fastify, { FastifyReply, FastifyRequest } from "fastify";
 
 import getIPInfo from "./IPTools.js";
-import { createReadStream, existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { exec } from "node:child_process";
 import { mkdir, rm } from "node:fs/promises";
 
@@ -29,8 +29,8 @@ async function renderVideo(ip: string, ipFileSafe: string, reply: FastifyReply) 
 	let data;
 
 	if (ip === "127.0.0.1") {
-		console.log(`Localhost detected, using a fake IP!`);
-		ip = "1.1.1.1";
+		console.log("Localhost detected, using a fake IP!");
+		ip = "91.191.213.54";
 	}
 
 	try {
